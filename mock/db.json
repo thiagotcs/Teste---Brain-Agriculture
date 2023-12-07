@@ -1,0 +1,52 @@
+{
+  "producers": [
+    {
+      "producerName": "Miguel Andrade",
+      "cpfOrCnpj": "09857453000103",
+      "farmName": "Fazendinha1",
+      "city": "Rio",
+      "state": "Rio",
+      "totalArea": 35,
+      "agriculturalArea": 10,
+      "vegetationArea": 10,
+      "crops": "Café",
+      "id": 7
+    },
+    {
+      "producerName": "Thiago Carvalho",
+      "cpfOrCnpj": "54662138000185",
+      "farmName": "Fazendinha5",
+      "city": "Maringá",
+      "state": "PR",
+      "totalArea": 45,
+      "agriculturalArea": 1,
+      "vegetationArea": 4,
+      "crops": "Café",
+      "id": 11
+    },
+    {
+      "producerName": "Aurora Andrade",
+      "cpfOrCnpj": "57383301021",
+      "farmName": "Fazendinha6",
+      "city": "Maringá",
+      "state": "PR",
+      "totalArea": 22,
+      "agriculturalArea": 1,
+      "vegetationArea": 4,
+      "crops": "batata",
+      "id": 12
+    },
+    {
+      "producerName": "Gizele Andrade",
+      "cpfOrCnpj": "92005120030",
+      "farmName": "Fazendinha2",
+      "city": "Rio",
+      "state": "SP",
+      "totalArea": 33,
+      "agriculturalArea": 99,
+      "vegetationArea": 10,
+      "crops": "Açucar",
+      "id": 13
+    }
+  ]
+}
