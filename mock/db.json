@@ -26,7 +26,7 @@
     },
     {
       "producerName": "Aurora Andrade",
-      "cpfOrCnpj": "57383301021",
+      "cpfOrCnpj": "99.898.989/8989-89",
       "farmName": "Fazendinha6",
       "city": "Maringá",
       "state": "PR",
@@ -38,14 +38,14 @@
     },
     {
       "producerName": "Gizele Andrade",
-      "cpfOrCnpj": "92005120030",
+      "cpfOrCnpj": "92.005.120/0300-09",
       "farmName": "Fazendinha2",
       "city": "Rio",
-      "state": "SP",
-      "totalArea": 33,
+      "state": "MG",
+      "totalArea": 339,
       "agriculturalArea": 99,
       "vegetationArea": 10,
-      "crops": "Açucar",
+      "crops": "Soja",
       "id": 13
     }
   ]
