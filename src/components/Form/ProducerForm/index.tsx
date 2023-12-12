@@ -3,18 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-
 import * as Input from '../Input'
 import { Button } from '../../Button'
 import { api } from '../../../services/api'
 import { ErrorMessage } from '../Input/ErrorMessage'
+import { isValidCpfOrCnpj, formatCpfOrCnpj } from '../../../utils/utils'
 
-const isValidCpfOrCnpj = (value: string): boolean => {
-  const cpfRegex = /^\d{11}$/
-  const cnpjRegex = /^\d{14}$/
-
-  return cpfRegex.test(value) || cnpjRegex.test(value)
-}
 const cpfOrCnpjSchema = z.string().refine((value) => isValidCpfOrCnpj(value), {
   message: 'CPF/CNPJ inválido',
 })
@@ -32,24 +26,25 @@ export const producerFormSchema = z
       .string()
       .min(3, { message: 'Nome da cidade deve ter pelo menos 3 caracteres' }),
     state: z.string().length(2, { message: 'O estado deve ter 2 caracteres' }),
-    totalArea: z
-      .number()
-      .refine((value) => isValidNumber(value) && value >= 0, {
-        message: 'A área total deve ser um número não negativo',
-      }),
-    agriculturalArea: z
-      .number()
-      .refine((value) => isValidNumber(value) && value >= 0, {
-        message: 'A área agrícola deve ser um número não negativo',
-      }),
-    vegetationArea: z
-      .number()
-      .refine((value) => isValidNumber(value) && value >= 0, {
-        message: 'A área de vegetação deve ser um número não negativo',
-      }),
-    crops: z
-      .string()
-      .min(3, { message: 'Nome da cultura deve ter pelo menos 3 caracteres' }),
+    totalArea: z.number(),
+    agriculturalArea: z.number(),
+    vegetationArea: z.number(),
+    crops: z.string().refine(
+      (crop) => {
+        const validCrops = [
+          'Soja',
+          'Milho',
+          'Algodão',
+          'Café',
+          'Cana de Açúcar',
+        ]
+        return validCrops.includes(crop)
+      },
+      {
+        message:
+          'Por favor, insira uma cultura válida (Soja, Milho, Algodão, Café, Cana de Açúcar)',
+      },
+    ),
   })
   .refine(
     (data) => {
@@ -71,11 +66,58 @@ export function ProducerForm() {
     handleSubmit,
     reset,
     setValue,
+    watch,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<NewProducerFormInputs>({
     resolver: zodResolver(producerFormSchema),
   })
 
+  const watchTotalArea = watch('totalArea') || 0
+  const watchAgriculturalArea = watch('agriculturalArea') || 0
+  const watchVegetationArea = watch('vegetationArea') || 0
+
+  const isValidArea = (
+    agriculturalArea: number | undefined,
+    vegetationArea: number | undefined,
+    totalArea: number | undefined,
+  ): boolean => {
+    const validAgriculturalArea = agriculturalArea || 0
+    const validVegetationArea = vegetationArea || 0
+    const validTotalArea = totalArea || 0
+
+    return validAgriculturalArea + validVegetationArea <= validTotalArea
+  }
+  useEffect(() => {
+    const isValid = isValidArea(
+      watchAgriculturalArea,
+      watchVegetationArea,
+      watchTotalArea,
+    )
+
+    if (!isValid) {
+      setError('agriculturalArea', {
+        type: 'manual',
+        message:
+          'A soma da área agrícola e de vegetação não deve ser maior que a área total da fazenda',
+      })
+      setError('vegetationArea', {
+        type: 'manual',
+        message:
+          'A soma da área agrícola e de vegetação não deve ser maior que a área total da fazenda',
+      })
+    } else {
+      clearErrors('agriculturalArea')
+      clearErrors('vegetationArea')
+    }
+  }, [
+    watchTotalArea,
+    clearErrors,
+    watchAgriculturalArea,
+    watchVegetationArea,
+    setError,
+  ])
   const handleSaveProducer = async (data: NewProducerFormInputs) => {
     try {
       if (id) {
@@ -83,30 +125,32 @@ export function ProducerForm() {
         alert('Produtor editado com sucesso.')
       } else {
         await api.post('producers', data)
-        alert('Produtor criado com sucesso.')
+        alert('Produtor cadastrado com sucesso.')
       }
 
       reset()
     } catch (error) {
-      console.error('Error saving producer:', error)
+      console.error('Erro ao salvar o produtor:', error)
     }
   }
   const fetchProducerData = async () => {
     try {
-      const response = await api.get(`producers/${id}`)
-      const producerData = response.data
+      if (id) {
+        const response = await api.get(`producers/${id}`)
+        const producerData = response.data
 
-      setValue('producerName', producerData.producerName)
-      setValue('cpfOrCnpj', producerData.cpfOrCnpj)
-      setValue('farmName', producerData.farmName)
-      setValue('city', producerData.city)
-      setValue('state', producerData.state)
-      setValue('crops', producerData.crops)
-      setValue('totalArea', producerData.totalArea)
-      setValue('agriculturalArea', producerData.agriculturalArea)
-      setValue('vegetationArea', producerData.vegetationArea)
+        setValue('producerName', producerData.producerName)
+        setValue('cpfOrCnpj', producerData.cpfOrCnpj)
+        setValue('farmName', producerData.farmName)
+        setValue('city', producerData.city)
+        setValue('state', producerData.state)
+        setValue('crops', producerData.crops)
+        setValue('totalArea', producerData.totalArea)
+        setValue('agriculturalArea', producerData.agriculturalArea)
+        setValue('vegetationArea', producerData.vegetationArea)
+      }
     } catch (error) {
-      console.error('Error fetching producer data:', error)
+      console.error('Erro ao buscar dados do produtor:', error)
     }
   }
 
@@ -120,9 +164,11 @@ export function ProducerForm() {
     <div className="mt-6 flex flex-col ">
       <div className="flex flex-col justify-between gap-4 border-b border-zinc-200 pb-5 lg:flex-row lg:items-center">
         <div className="space-y-1">
-          <h2 className="text-lg font-medium text-zinc-900">Personal info</h2>
+          <h2 className="text-lg font-medium text-zinc-900">
+            Informação pessoal
+          </h2>
           <span className="text-sm text-zinc-500">
-            Update your personal details here.
+            Atualize seus dados pessoais aqui.
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -134,6 +180,13 @@ export function ProducerForm() {
           </Button>
         </div>
       </div>
+      <ErrorMessage
+        error={
+          errors?.agriculturalArea?.message ||
+          (errors?.isSubmitted && 'Campo obrigatório') ||
+          ''
+        }
+      />
       <form
         id="settings"
         className="mt-6 flex w-full flex-col gap-5 divide-y divide-zinc-200"
@@ -146,15 +199,17 @@ export function ProducerForm() {
           >
             Nome do produtor
           </label>
-          <Input.Root>
-            <Input.Control
-              id="producerName"
-              placeholder="Nome"
-              required
-              {...register('producerName')}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.producerName?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                id="producerName"
+                placeholder="Nome"
+                required
+                {...register('producerName')}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.producerName?.message} />
+          </div>
         </div>
         <div className="flex flex-col gap-3 pt-5 lg:grid lg:grid-cols-form">
           <label
@@ -163,15 +218,22 @@ export function ProducerForm() {
           >
             CPF/CNPJ
           </label>
-          <Input.Root>
-            <Input.Control
-              id="cpfOrCnpj"
-              placeholder="CPF/CNPJ"
-              required
-              {...register('cpfOrCnpj')}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.cpfOrCnpj?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                placeholder="CPF (123.456.789-09) ou CNPJ (12.345.678/0001-01)"
+                required
+                {...register('cpfOrCnpj', {
+                  onChange: (e) => {
+                    const value = e.target.value
+                    const formattedValue = formatCpfOrCnpj(value)
+                    setValue('cpfOrCnpj', formattedValue)
+                  },
+                })}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.cpfOrCnpj?.message} />
+          </div>
         </div>
         <div className="flex flex-col gap-3 pt-5 lg:grid lg:grid-cols-form">
           <label
@@ -180,30 +242,34 @@ export function ProducerForm() {
           >
             Nome da Fazenda
           </label>
-          <Input.Root>
-            <Input.Control
-              id="farmName"
-              placeholder="Nome da Fazenda"
-              required
-              {...register('farmName')}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.farmName?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                id="farmName"
+                placeholder="Nome da Fazenda"
+                required
+                {...register('farmName')}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.farmName?.message} />
+          </div>
         </div>
         <div className="flex flex-col gap-3 pt-5 lg:grid lg:grid-cols-form">
           <label htmlFor="city" className="text-sm font-medium text-zinc-700">
             Cidade / Estado
           </label>
           <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2">
-            <Input.Root>
-              <Input.Control
-                id="city"
-                placeholder="Cidade"
-                required
-                {...register('city')}
-              />
-            </Input.Root>
-            <ErrorMessage error={errors.city?.message} />
+            <div className="flex flex-1 flex-col gap-1">
+              <Input.Root>
+                <Input.Control
+                  id="city"
+                  placeholder="Cidade"
+                  required
+                  {...register('city')}
+                />
+              </Input.Root>
+              <ErrorMessage error={errors.city?.message} />
+            </div>
             <div className="flex flex-col gap-3 lg:block">
               <Input.Root>
                 <Input.Control
@@ -221,15 +287,17 @@ export function ProducerForm() {
           <label htmlFor="crops" className="text-sm font-medium text-zinc-700">
             Culturas plantadas (Soja, Milho, Algodão, Café, Cana de Açucar)
           </label>
-          <Input.Root>
-            <Input.Control
-              id="crops"
-              placeholder="Culturas plantadas (Soja, Milho, Algodão, Café, Cana de Açucar)"
-              required
-              {...register('crops')}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.crops?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                id="crops"
+                placeholder="Culturas plantadas (Soja, Milho, Algodão, Café, Cana de Açucar)"
+                required
+                {...register('crops')}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.crops?.message} />
+          </div>
         </div>
         <div className="flex flex-col gap-3 pt-5 lg:grid lg:grid-cols-form">
           <label
@@ -238,15 +306,17 @@ export function ProducerForm() {
           >
             Área total em hectares da fazenda
           </label>
-          <Input.Root>
-            <Input.Control
-              id="totalArea"
-              placeholder="Área total em hectares da fazenda"
-              required
-              {...register('totalArea', { valueAsNumber: true })}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.totalArea?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                id="totalArea"
+                placeholder="Área total em hectares da fazenda"
+                required
+                {...register('totalArea', { valueAsNumber: true })}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.totalArea?.message} />
+          </div>
         </div>
         <div className="flex flex-col gap-3 pt-5 lg:grid lg:grid-cols-form">
           <label
@@ -255,15 +325,17 @@ export function ProducerForm() {
           >
             Área agricultável em hectares
           </label>
-          <Input.Root>
-            <Input.Control
-              id="agriculturalArea"
-              placeholder="Área agricultável em hectares"
-              required
-              {...register('agriculturalArea', { valueAsNumber: true })}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.agriculturalArea?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                id="agriculturalArea"
+                placeholder="Área agricultável em hectares"
+                required
+                {...register('agriculturalArea', { valueAsNumber: true })}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.agriculturalArea?.message} />
+          </div>
         </div>
         <div className="flex flex-col gap-3 pt-5 lg:grid lg:grid-cols-form">
           <label
@@ -272,15 +344,17 @@ export function ProducerForm() {
           >
             Área de vegetação em hectares
           </label>
-          <Input.Root>
-            <Input.Control
-              id="vegetationArea"
-              placeholder="Área de vegetação em hectares"
-              required
-              {...register('vegetationArea', { valueAsNumber: true })}
-            />
-          </Input.Root>
-          <ErrorMessage error={errors.vegetationArea?.message} />
+          <div className="flex flex-1 flex-col gap-1">
+            <Input.Root>
+              <Input.Control
+                id="vegetationArea"
+                placeholder="Área de vegetação em hectares"
+                required
+                {...register('vegetationArea', { valueAsNumber: true })}
+              />
+            </Input.Root>
+            <ErrorMessage error={errors.vegetationArea?.message} />
+          </div>
         </div>
       </form>
     </div>
