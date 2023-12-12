@@ -40,18 +40,12 @@ export function Sidebar() {
         </Input.Root>
 
         <nav className="space-y-0.5">
-          <NavItem title="Home" icon={Home} to="/" />
           <NavItem title="Dashboard" icon={BarChart} to="/" />
           <NavItem title="Produtor" icon={User} to="/add-producer" />
-          <NavItem title="Produtores" icon={SquareStack} to="/producer" />
-          <NavItem title="Reporting" icon={CheckSquare} to="/" />
+          <NavItem title="Produtores" icon={CheckSquare} to="/producer" />
         </nav>
 
         <div className="mt-auto flex flex-col gap-6">
-          <nav className="space-y-0.5">
-            <NavItem title="Support" icon={LifeBuoy} to="/" />
-            <NavItem title="Settings" icon={Cog} to="/" />
-          </nav>
           <UsedSpaceWidget />
           <div className="h-px bg-zinc-200"></div>
           <Profile />

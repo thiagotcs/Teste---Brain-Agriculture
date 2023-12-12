@@ -57,16 +57,6 @@ export function NavTabs() {
               title="Produtores"
               isSelected={currentTab === 'tab3'}
             />
-            <TabItem
-              value="tab4"
-              title="Fazenda"
-              isSelected={currentTab === 'tab4'}
-            />
-            <TabItem
-              value="tab5"
-              title="Culturas Plantadas"
-              isSelected={currentTab === 'tab5'}
-            />
           </Tabs.List>
         </ScrollArea.Viewport>
 
