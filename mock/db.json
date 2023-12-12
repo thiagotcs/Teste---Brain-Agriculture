@@ -2,10 +2,10 @@
   "producers": [
     {
       "producerName": "Miguel Andrade",
-      "cpfOrCnpj": "09857453000103",
+      "cpfOrCnpj": "098.574.530-00",
       "farmName": "Fazendinha1",
       "city": "Rio",
-      "state": "Rio",
+      "state": "RJ",
       "totalArea": 35,
       "agriculturalArea": 10,
       "vegetationArea": 10,
@@ -14,7 +14,7 @@
     },
     {
       "producerName": "Thiago Carvalho",
-      "cpfOrCnpj": "54662138000185",
+      "cpfOrCnpj": "546.621.380-00",
       "farmName": "Fazendinha5",
       "city": "Maringá",
       "state": "PR",
