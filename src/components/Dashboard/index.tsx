@@ -46,11 +46,17 @@ export const Dashboard = () => {
         <div className="space-y-1">
           <h2 className="text-lg font-medium text-zinc-900">Dashboard</h2>
           <span className="text-sm text-zinc-500">
-            Most recent data update.
+            Atualização de dados mais recente.
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="primary">Generate Report</Button>
+          <Button
+            variant="primary"
+            disabled
+            className="no-hover cursor-not-allowed bg-gray-300 text-gray-500 hover:!bg-gray-300 hover:!text-gray-500"
+          >
+            Generate Report
+          </Button>
         </div>
       </div>
       <DashboardBox producers={producers} />
